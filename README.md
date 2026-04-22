@@ -28,13 +28,7 @@ ListaEsperaCCR/
 
 ## Variables de entorno
 
-1. Copia el archivo de ejemplo:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-2. Variables principales en `.env.example`:
+Variables principales requeridas en `.env`:
 
 - `POSTGRES_DB`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_HOST`, `POSTGRES_PORT`
 - `REDIS_HOST`, `REDIS_PORT`
@@ -70,57 +64,6 @@ Accesos:
 - Frontend: `http://localhost/`
 - API: `http://localhost/api/`
 - Admin Django: `http://localhost/admin/`
-
-## Despliegue público (producción)
-
-Archivos nuevos para producción:
-
-- `docker-compose.prod.yml`
-- `nginx/nginx.prod.conf`
-- `.env.production.example`
-- `PRODUCCION_CHECKLIST.md`
-
-Pasos:
-
-1. Crear archivo de entorno:
-
-```powershell
-Copy-Item .env.production.example .env.production
-```
-
-2. Completar secretos y dominio real en `.env.production`.
-
-3. Cargar certificados TLS en `nginx/certs/`:
-
-- `fullchain.pem`
-- `privkey.pem`
-
-4. Levantar:
-
-```powershell
-docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
-```
-
-5. Verificar logs:
-
-```powershell
-docker compose -f docker-compose.prod.yml logs -f nginx
-docker compose -f docker-compose.prod.yml logs -f backend
-```
-
-Nota: el stack productivo no carga fixtures demo automáticamente.
-
-## Despliegue con Coolify + Cloudflare Tunnel
-
-Archivos dedicados:
-
-- `docker-compose.coolify.yml`
-- `nginx/nginx.coolify.conf`
-- `COOLIFY_CLOUDFLARE_DEPLOY.md`
-
-Guía completa:
-
-- [COOLIFY_CLOUDFLARE_DEPLOY.md](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/COOLIFY_CLOUDFLARE_DEPLOY.md)
 
 ## Comandos Make disponibles
 

@@ -4,7 +4,7 @@ Este checklist está orientado a este repo (`Django + Next + Nginx + Docker`) y 
 
 ## 1) Pre-Deploy (Obligatorio)
 
-- [ ] Crear `.env.production` desde [.env.production.example](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/.env.production.example).
+- [ ] Crear `.env.production` desde `.env.production.example`.
 - [ ] Cambiar `DJANGO_SECRET_KEY`.
 - [ ] Cambiar `POSTGRES_PASSWORD`.
 - [ ] Configurar `DJANGO_ALLOWED_HOSTS` con tu dominio real.
@@ -40,7 +40,7 @@ docker compose -f docker-compose.prod.yml logs -f backend
 
 ## 4) Endurecimiento Activo En Este Repo
 
-- [ ] `Django` con settings de seguridad en [settings.py](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/backend/config/settings.py):
+- [ ] `Django` con settings de seguridad en `backend/config/settings.py`:
   - `SECURE_SSL_REDIRECT`
   - `SESSION_COOKIE_SECURE`
   - `CSRF_COOKIE_SECURE`
@@ -48,13 +48,13 @@ docker compose -f docker-compose.prod.yml logs -f backend
   - `X_FRAME_OPTIONS`
   - `DRF throttling`
 - [ ] `Auth throttling` para login/refresh en:
-  - [auth_views.py](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/backend/apps/usuarios/auth_views.py)
-  - [auth_urls.py](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/backend/apps/usuarios/auth_urls.py)
+  - `backend/apps/usuarios/auth_views.py`
+  - `backend/apps/usuarios/auth_urls.py`
 - [ ] Cookies frontend con `httpOnly + secure + sameSite=lax` en:
-  - [actions.ts](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/frontend/app/actions.ts)
-  - [middleware.ts](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/frontend/middleware.ts)
+  - `frontend/app/actions.ts`
+  - `frontend/middleware.ts`
 - [ ] Nginx productivo con TLS, headers y rate-limit en:
-  - [nginx.prod.conf](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/nginx/nginx.prod.conf)
+  - `nginx/nginx.prod.conf`
 
 ## 5) Validaciones Funcionales
 

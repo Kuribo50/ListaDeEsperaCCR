@@ -1,6 +1,6 @@
 # Deploy En Coolify + Cloudflare Tunnel + Zero Trust
 
-Dominio objetivo: `ccr.albertoreyes.cl`
+Dominio objetivo: `app.example.com`
 
 ## 1) Preparar variables de entorno
 
@@ -9,8 +9,8 @@ Dominio objetivo: `ccr.albertoreyes.cl`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 - `DJANGO_SECRET_KEY`
-- `DJANGO_ALLOWED_HOSTS=ccr.albertoreyes.cl`
-- `DJANGO_CSRF_TRUSTED_ORIGINS=https://ccr.albertoreyes.cl`
+- `DJANGO_ALLOWED_HOSTS=app.example.com`
+- `DJANGO_CSRF_TRUSTED_ORIGINS=https://app.example.com`
 - `DJANGO_DEBUG=False`
 - `DJANGO_PRODUCTION=True`
 - `DJANGO_ENABLE_ADMIN=False`
@@ -24,9 +24,9 @@ Dominio objetivo: `ccr.albertoreyes.cl`
 ## 2) Crear app en Coolify
 
 1. Tipo: `Docker Compose`.
-2. Archivo compose: [docker-compose.coolify.yml](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/docker-compose.coolify.yml)
+2. Archivo compose: `docker-compose.coolify.yml`
 3. Servicio público: `nginx` puerto `80`.
-4. Dominio en Coolify: `ccr.albertoreyes.cl`.
+4. Dominio en Coolify: `app.example.com`.
 5. Deploy inicial.
 
 Notas:
@@ -39,12 +39,12 @@ Notas:
 2. Si usas CLI de `cloudflared` (modo remoto administrado), agrega DNS del túnel:
 
 ```bash
-cloudflared tunnel route dns srv-car-tunnel ccr.albertoreyes.cl
+cloudflared tunnel route dns <NOMBRE_TUNEL> app.example.com
 ```
 
 Esto crea/actualiza el registro DNS para que el hostname use el túnel.
 3. En el túnel agrega hostname:
-- Hostname: `ccr.albertoreyes.cl`
+- Hostname: `app.example.com`
 - Service type: `HTTP`
 - URL destino: `http://<IP_SERVIDOR_COOLIFY>:80` (o al entrypoint de Coolify si usas proxy interno).
 4. Activa el túnel y verifica que el DNS quede apuntando al túnel.
@@ -53,7 +53,7 @@ Esto crea/actualiza el registro DNS para que el hostname use el túnel.
 
 1. Access > Applications > Add application.
 2. Tipo: Self-hosted.
-3. Dominio: `ccr.albertoreyes.cl`.
+3. Dominio: `app.example.com`.
 4. Política:
 - Allow: correos de tu organización o grupo definido.
 - Deny: todo lo demás.
@@ -71,5 +71,5 @@ Esto crea/actualiza el registro DNS para que el hostname use el túnel.
 ## 6) Notas importantes
 
 - Si aparece loop de redirección HTTPS, revisa que el proxy pase `X-Forwarded-Proto=https`.
-- El admin (`/admin`) está bloqueado por defecto en [nginx.coolify.conf](/C:/Users/INFORMATICA%20CAR/Documents/GitHub/ListaEsperaCCR/nginx/nginx.coolify.conf).
+- El admin (`/admin`) está bloqueado por defecto en `nginx/nginx.coolify.conf`.
 - Si necesitas admin, publícalo en subdominio aparte y protegido con política Access más estricta.
