@@ -8,10 +8,14 @@ Dominio objetivo: `app.example.com`
 - `POSTGRES_DB`
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT=5432`
+- `REDIS_HOST` (si usas recurso externo; si no, queda por defecto `redis`)
+- `REDIS_PORT=6379`
 - `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG=False`
 - `DJANGO_ALLOWED_HOSTS=app.example.com`
 - `DJANGO_CSRF_TRUSTED_ORIGINS=https://app.example.com`
-- `DJANGO_DEBUG=False`
 - `DJANGO_PRODUCTION=True`
 - `DJANGO_ENABLE_ADMIN=False`
 - `DJANGO_SECURE_SSL_REDIRECT=True`
