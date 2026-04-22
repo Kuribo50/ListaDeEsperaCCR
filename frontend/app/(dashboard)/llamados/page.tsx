@@ -1,0 +1,232 @@
+"use client";
+
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { FiRefreshCw, FiSearch } from "react-icons/fi";
+import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
+import type { Paciente } from "@/lib/types";
+import PacienteTable from "@/components/PacienteTable";
+
+function normalizeRut(value: string) {
+  return value.toLowerCase().replace(/[^0-9k]/g, "");
+}
+
+function normalizeSearchText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase("es-CL")
+    .trim();
+}
+
+function calcularDiasDesde(fecha: string | null | undefined) {
+  if (!fecha) return null;
+  const inicio = new Date(`${fecha}T00:00:00`);
+  if (Number.isNaN(inicio.getTime())) return null;
+
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+  const diffMs = hoy.getTime() - inicio.getTime();
+  if (diffMs < 0) return 0;
+  return Math.floor(diffMs / 86400000);
+}
+
+function diasEnLlamados(paciente: Paciente) {
+  return calcularDiasDesde(paciente.fecha_cambio_estado) ?? paciente.dias_en_lista;
+}
+
+export default function LlamadosPage() {
+  const { user } = useAuth();
+  const [pacientes, setPacientes] = useState<Paciente[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // States for filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [prioridadFilter, setPrioridadFilter] = useState("TODAS");
+  const [estadoFilter, setEstadoFilter] = useState("TODOS");
+  const [ordering, setOrdering] = useState("-dias");
+
+  const cargar = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const [pendientes, rescate] = await Promise.all([
+        api.get<Paciente[]>(`/pacientes/?estado=PENDIENTE`),
+        api.get<Paciente[]>(`/pacientes/?estado=RESCATE`),
+      ]);
+      const todos = [...pendientes, ...rescate].filter((p) => {
+        if (p.kine_asignado === null) return false;
+        if (user?.rol === "KINE" && p.kine_asignado !== user.id) return false;
+        return true;
+      });
+      
+      const prioridadOrder: Record<string, number> = {
+        ALTA: 1,
+        MEDIANA: 2,
+        MODERADA: 3,
+        LICENCIA_MEDICA: 4,
+      };
+      
+      todos.sort((a, b) => {
+        const pA = prioridadOrder[a.prioridad] ?? 99;
+        const pB = prioridadOrder[b.prioridad] ?? 99;
+        if (pA !== pB) return pA - pB;
+        if (ordering === "dias") {
+          return diasEnLlamados(a) - diasEnLlamados(b);
+        }
+        return diasEnLlamados(b) - diasEnLlamados(a);
+      });
+      setPacientes(todos);
+    } catch {
+      setPacientes([]);
+      setError("No se pudo cargar la cola de llamados.");
+    } finally {
+      setLoading(false);
+    }
+  }, [user, ordering]);
+
+  useEffect(() => {
+    void cargar();
+  }, [cargar]);
+
+  // Derived state to apply local filters
+  const pacientesFiltrados = useMemo(() => {
+    return pacientes.filter((p) => {
+      // Búsqueda por RUT o Nombre
+      if (searchQuery) {
+        const queryText = normalizeSearchText(searchQuery);
+        const queryRut = normalizeRut(searchQuery);
+        const matchesNombre = normalizeSearchText(p.nombre).includes(queryText);
+        const matchesRut = normalizeRut(p.rut).includes(queryRut);
+        if (!matchesNombre && !matchesRut) return false;
+      }
+      
+      // Filtro por Prioridad
+      if (prioridadFilter !== "TODAS" && p.prioridad !== prioridadFilter) {
+        return false;
+      }
+
+      // Filtro por Estado
+      if (estadoFilter !== "TODOS" && p.estado !== estadoFilter) {
+        return false;
+      }
+      
+      return true;
+    });
+  }, [pacientes, searchQuery, prioridadFilter, estadoFilter]);
+
+  function clearFilters() {
+    setSearchQuery("");
+    setPrioridadFilter("TODAS");
+    setEstadoFilter("TODOS");
+  }
+
+  if (!user) return null;
+
+  return (
+    <div className="space-y-3 text-[13px]">
+      <header className="ccr-panel rounded-2xl p-4 sm:p-5">
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">Cola de Llamados</h1>
+              <p className="mt-0.5 text-xs text-[#60786B]">
+                Gestión de pacientes en estado pendiente o rescate.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => void cargar()}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#C5DDCC] bg-white px-3 py-2 text-[11px] font-semibold text-[#21563B] outline-none transition hover:bg-[#ECF7F0] focus-visible:ring-2 focus-visible:ring-[#60B689] sm:w-auto"
+            >
+              <FiRefreshCw size={13} />
+              Recargar
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
+            <div className="relative">
+              <FiSearch
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#7A9585]"
+                size={15}
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") event.preventDefault();
+                }}
+                placeholder="Buscar por nombre o RUT"
+                className="w-full rounded-xl border border-[#D5E4D8] bg-white px-9 py-2.5 text-xs outline-none focus:border-[#5FB88C]"
+                aria-label="Buscar pacientes"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <select
+                className="rounded-xl border border-[#D5E4D8] bg-white px-3 py-2.5 text-xs text-[#2D4336] outline-none focus:border-[#5FB88C]"
+                value={estadoFilter}
+                onChange={(event) => setEstadoFilter(event.target.value)}
+              >
+                <option value="TODOS">Todos los estados</option>
+                <option value="PENDIENTE">Solo pendientes</option>
+                <option value="RESCATE">Solo rescates</option>
+              </select>
+
+              <select
+                className="rounded-xl border border-[#D5E4D8] bg-white px-3 py-2.5 text-xs text-[#2D4336] outline-none focus:border-[#5FB88C]"
+                value={prioridadFilter}
+                onChange={(event) => setPrioridadFilter(event.target.value)}
+              >
+                <option value="TODAS">Todas las prioridades</option>
+                <option value="ALTA">Alta</option>
+                <option value="MEDIANA">Mediana</option>
+                <option value="MODERADA">Moderada</option>
+                <option value="LICENCIA_MEDICA">Lic. médica</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="inline-flex h-[34px] w-full items-center justify-center rounded-lg border border-[#D5E4D8] bg-white px-3 text-[11px] font-semibold text-[#294C3A] transition hover:bg-[#F5FAF7] sm:w-auto"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-xs font-medium text-red-700">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div
+          className="ccr-panel rounded-2xl p-12 text-center text-sm text-gray-400 animate-pulse"
+          style={{ border: "0.5px solid #D4E4D4" }}
+        >
+          Cargando…
+        </div>
+      ) : (
+        <PacienteTable 
+          pacientes={pacientesFiltrados} 
+          usuario={user} 
+          onRefresh={cargar} 
+          ordering={ordering}
+          daysMode="llamados"
+          showProximaAtencion={false}
+          onToggleDiasOrder={() => {
+            setOrdering((prev) => (prev === "dias" ? "-dias" : "dias"));
+          }}
+        />
+      )}
+    </div>
+  );
+}

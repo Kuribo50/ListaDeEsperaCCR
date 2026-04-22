@@ -1,0 +1,9 @@
+from django.urls import re_path
+
+from .views import PorKineReporteView, ResumenReporteView
+
+
+urlpatterns = [
+    re_path(r"^reportes/resumen/?$", ResumenReporteView.as_view(), name="reportes-resumen"),
+    re_path(r"^reportes/por-kine/?$", PorKineReporteView.as_view(), name="reportes-por-kine"),
+]

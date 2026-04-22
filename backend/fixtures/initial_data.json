@@ -1,0 +1,87 @@
+[
+  {
+    "model": "usuarios.usuario",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$1LdSDfYDpHwApQ8kfRJ7dk$8eOMsTo7IdsFg7ecuAw+abb7A3eYMexYoBsLzPbo6hY=",
+      "last_login": null,
+      "is_superuser": false,
+      "rut": "11111111K",
+      "nombre": "Seba Salgado",
+      "rol": "KINE",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$1LdSDfYDpHwApQ8kfRJ7dk$8eOMsTo7IdsFg7ecuAw+abb7A3eYMexYoBsLzPbo6hY=",
+      "last_login": null,
+      "is_superuser": false,
+      "rut": "22222222K",
+      "nombre": "Seba Campos",
+      "rol": "KINE",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$1LdSDfYDpHwApQ8kfRJ7dk$8eOMsTo7IdsFg7ecuAw+abb7A3eYMexYoBsLzPbo6hY=",
+      "last_login": null,
+      "is_superuser": false,
+      "rut": "33333333K",
+      "nombre": "Mane",
+      "rol": "KINE",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 4,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$1LdSDfYDpHwApQ8kfRJ7dk$8eOMsTo7IdsFg7ecuAw+abb7A3eYMexYoBsLzPbo6hY=",
+      "last_login": null,
+      "is_superuser": false,
+      "rut": "44444444K",
+      "nombre": "M° Ignacia",
+      "rol": "KINE",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "usuarios.usuario",
+    "pk": 5,
+    "fields": {
+      "password": "pbkdf2_sha256$870000$1LdSDfYDpHwApQ8kfRJ7dk$8eOMsTo7IdsFg7ecuAw+abb7A3eYMexYoBsLzPbo6hY=",
+      "last_login": null,
+      "is_superuser": true,
+      "rut": "66666666K",
+      "nombre": "Administrador Sistema",
+      "rol": "ADMIN",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+]
