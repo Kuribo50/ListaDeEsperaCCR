@@ -74,6 +74,12 @@ Accesos:
 - `make shell`
 - `make logs`
 
+## Deploy en Coolify con Dockerfile
+
+Guía rápida:
+
+- `COOLIFY_DOCKERFILE_DEPLOY.md`
+
 ## Credenciales iniciales
 
 Fixture: `backend/fixtures/initial_data.json`

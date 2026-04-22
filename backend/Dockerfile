@@ -17,7 +17,9 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=app:app . /app
+RUN chmod +x /app/entrypoint.sh
 
 USER app
 
 EXPOSE 8000
+CMD ["/app/entrypoint.sh"]
