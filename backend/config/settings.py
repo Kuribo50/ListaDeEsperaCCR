@@ -34,6 +34,15 @@ def env_int(name: str, default: int) -> int:
         return default
 
 
+def env_optional(name: str) -> str | None:
+    value = os.getenv(name)
+    if value is None:
+        return None
+    if isinstance(value, str) and value.strip() == "":
+        return None
+    return value.strip()
+
+
 def _normalize_host(raw: str) -> str:
     candidate = raw.strip()
     if not candidate:
@@ -68,6 +77,47 @@ def origins_from_coolify() -> list[str]:
             if host:
                 origins.append(f"https://{host}")
     return origins
+
+
+def postgres_connection_from_env() -> dict[str, str]:
+    # Explicit vars have priority; URL is used as fallback when provided.
+    db_name = env_optional("POSTGRES_DB")
+    db_user = env_optional("POSTGRES_USER")
+    db_password = env_optional("POSTGRES_PASSWORD")
+    db_host = env("POSTGRES_HOST", "localhost").strip()
+    db_port = env("POSTGRES_PORT", "5432").strip()
+
+    url_candidate = env_optional("DATABASE_URL") or env_optional("POSTGRES_URL")
+    if not url_candidate and "://" in db_host:
+        url_candidate = db_host
+
+    if url_candidate and "://" in url_candidate:
+        parsed = urlparse(url_candidate)
+        if parsed.hostname:
+            db_host = parsed.hostname
+        if parsed.port:
+            db_port = str(parsed.port)
+        if not db_user and parsed.username:
+            db_user = parsed.username
+        if not db_password and parsed.password:
+            db_password = parsed.password
+        if not db_name and parsed.path:
+            db_name = parsed.path.lstrip("/")
+    else:
+        # Supports POSTGRES_HOST like "host:5432".
+        if db_host.count(":") == 1 and "://" not in db_host:
+            host_part, port_part = db_host.split(":", 1)
+            if host_part.strip() and port_part.strip().isdigit():
+                db_host = host_part.strip()
+                db_port = port_part.strip()
+
+    return {
+        "NAME": db_name or "lista_espera_ccr",
+        "USER": db_user or "postgres",
+        "PASSWORD": db_password or "postgres",
+        "HOST": db_host or "localhost",
+        "PORT": db_port or "5432",
+    }
 
 
 DJANGO_ENV = env("DJANGO_ENV", "development").lower()
@@ -148,14 +198,15 @@ ASGI_APPLICATION = "config.asgi.application"
 DB_ENGINE = env("DJANGO_DB_ENGINE", "sqlite").lower()
 
 if DB_ENGINE == "postgres":
+    pg = postgres_connection_from_env()
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
-            "NAME": env("POSTGRES_DB", "lista_espera_ccr"),
-            "USER": env("POSTGRES_USER", "postgres"),
-            "PASSWORD": env("POSTGRES_PASSWORD", "postgres"),
-            "HOST": env("POSTGRES_HOST", "localhost"),
-            "PORT": env("POSTGRES_PORT", "5432"),
+            "NAME": pg["NAME"],
+            "USER": pg["USER"],
+            "PASSWORD": pg["PASSWORD"],
+            "HOST": pg["HOST"],
+            "PORT": pg["PORT"],
         }
     }
 else:
