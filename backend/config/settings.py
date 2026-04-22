@@ -1,6 +1,7 @@
 from pathlib import Path
 import os
 from datetime import timedelta
+from urllib.parse import urlparse
 from django.core.exceptions import ImproperlyConfigured
 
 
@@ -8,7 +9,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def env(name: str, default: str = "") -> str:
-    return os.getenv(name, default)
+    value = os.getenv(name)
+    if value is None:
+        return default
+    if isinstance(value, str) and value.strip() == "":
+        return default
+    return value
 
 
 def env_bool(name: str, default: bool = False) -> bool:
@@ -28,15 +34,60 @@ def env_int(name: str, default: int) -> int:
         return default
 
 
+def _normalize_host(raw: str) -> str:
+    candidate = raw.strip()
+    if not candidate:
+        return ""
+    if "://" in candidate:
+        parsed = urlparse(candidate)
+        candidate = parsed.hostname or ""
+    else:
+        # Remove an optional :port suffix if provided without scheme.
+        candidate = candidate.split(":", 1)[0]
+    return candidate.strip().strip("[]")
+
+
+def hosts_from_coolify() -> list[str]:
+    raw = env("SERVICE_FQDN_NGINX", "")
+    values = [v.strip() for v in raw.split(",") if v.strip()]
+    hosts = [_normalize_host(v) for v in values]
+    return [h for h in hosts if h]
+
+
+def origins_from_coolify() -> list[str]:
+    raw = env("SERVICE_FQDN_NGINX", "")
+    values = [v.strip() for v in raw.split(",") if v.strip()]
+    origins: list[str] = []
+    for value in values:
+        if "://" in value:
+            parsed = urlparse(value)
+            if parsed.scheme and parsed.hostname:
+                origins.append(f"{parsed.scheme}://{parsed.hostname}")
+        else:
+            host = _normalize_host(value)
+            if host:
+                origins.append(f"https://{host}")
+    return origins
+
+
 DJANGO_ENV = env("DJANGO_ENV", "development").lower()
 IS_PRODUCTION = env_bool("DJANGO_PRODUCTION", DJANGO_ENV in {"prod", "production"})
 
 SECRET_KEY = env("DJANGO_SECRET_KEY", "replace-me")
 DEBUG = env_bool("DJANGO_DEBUG", not IS_PRODUCTION)
-ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1")
-CSRF_TRUSTED_ORIGINS = env_list(
-    "DJANGO_CSRF_TRUSTED_ORIGINS", "http://localhost,http://127.0.0.1"
-)
+allowed_hosts_default = "localhost,127.0.0.1"
+if IS_PRODUCTION:
+    coolify_hosts = hosts_from_coolify()
+    if coolify_hosts:
+        allowed_hosts_default = ",".join(coolify_hosts)
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", allowed_hosts_default)
+
+csrf_default = "http://localhost,http://127.0.0.1"
+if IS_PRODUCTION:
+    coolify_origins = origins_from_coolify()
+    if coolify_origins:
+        csrf_default = ",".join(coolify_origins)
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", csrf_default)
 ENABLE_DJANGO_ADMIN = env_bool("DJANGO_ENABLE_ADMIN", not IS_PRODUCTION)
 
 if IS_PRODUCTION and SECRET_KEY in {"", "replace-me"}:
